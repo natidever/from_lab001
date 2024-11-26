@@ -3,10 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 class TaskOptionsDialog extends StatelessWidget {
   final Function() onDelete;
+  final Function() onEdit;
 
   const TaskOptionsDialog({
     Key? key,
     required this.onDelete,
+    required this.onEdit,
   }) : super(key: key);
 
   @override
@@ -34,7 +36,7 @@ class TaskOptionsDialog extends StatelessWidget {
             InkWell(
               onTap: () {
                 Navigator.pop(context);
-                // Edit functionality can be added here
+                onEdit();
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(

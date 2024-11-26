@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_engineering_test_from_lab/task.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize SharedPreferences
+  await SharedPreferences.getInstance();
+
   runApp(const MyApp());
 }
 
