@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_engineering_test_from_lab/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() async {
   // Ensure Flutter bindings are initialized
@@ -19,8 +20,119 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      home: Task(),
+      home: MainScreen(),
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class MainScreen extends StatefulWidget {
+  @override
+  _MainScreenState createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _selectedIndex = 0;
+
+  // All tabs will show the Task widget for now
+  final List<Widget> _screens = [
+    Task(),
+    Task(),
+    Task(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          selectedItemColor: const Color(0xFF4525A2), // Primary color
+          unselectedItemColor: const Color(0xFF7C7C7D),
+          selectedLabelStyle: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+          unselectedLabelStyle: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          items: [
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Icon(
+                  Icons.list,
+                  size: 24,
+                ),
+              ),
+              activeIcon: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Icon(
+                  Icons.list,
+                  size: 24,
+                  color: const Color(0xFF4525A2),
+                ),
+              ),
+              label: 'Tasks',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Icon(
+                  Icons.chat_bubble_outline,
+                  size: 24,
+                ),
+              ),
+              activeIcon: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Icon(
+                  Icons.chat_bubble,
+                  size: 24,
+                  color: const Color(0xFF4525A2),
+                ),
+              ),
+              label: 'Communication',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Icon(
+                  Icons.person_outline,
+                  size: 24,
+                ),
+              ),
+              activeIcon: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Icon(
+                  Icons.person,
+                  size: 24,
+                  color: const Color(0xFF4525A2),
+                ),
+              ),
+              label: 'Profile',
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
