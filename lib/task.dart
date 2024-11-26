@@ -89,6 +89,16 @@ class _TaskState extends State<Task> {
             // Development Team default tasks
             teamsList[i].tasks = [
               TaskModel(
+                title: 'Calendar Integration',
+                time: 'Nov 20 2:00 PM',
+                dateBackgroundColor: const Color(0xFFFEF2CD).value,
+              ),
+              TaskModel(
+                title: 'Survey Review and Analysis',
+                time: 'Nov 20 2:00 PM',
+                dateBackgroundColor: const Color(0xFFFEF2CD).value,
+              ),
+              TaskModel(
                 title: 'Mobile App Design',
                 time: 'Oct 12 1:00 PM',
                 dateBackgroundColor: const Color(0xFFFEF2CD).value,
@@ -142,7 +152,7 @@ class _TaskState extends State<Task> {
     }
   }
 
-  void _addNewTask() {
+  void _addNewTask(int teamIndex) {
     if (_taskNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -157,7 +167,7 @@ class _TaskState extends State<Task> {
         '${_dueDateController.text} ${_dueTimeController.text}';
 
     setState(() {
-      teamsList[0].tasks.insert(
+      teamsList[teamIndex].tasks.insert(
             0,
             TaskModel(
               title: _taskNameController.text,
@@ -167,13 +177,9 @@ class _TaskState extends State<Task> {
           );
     });
 
-    _saveTeamTasks(0); // Save tasks after adding new one
+    _saveTeamTasks(teamIndex); // Save tasks for the correct team
 
-    // Clear controllers and show success message
-    _taskNameController.clear();
-    _memberController.clear();
-    _dueDateController.clear();
-    _dueTimeController.clear();
+    _clearControllers();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -186,7 +192,7 @@ class _TaskState extends State<Task> {
     Navigator.pop(context);
   }
 
-  void _showAddTaskBottomSheet() {
+  void _showAddTaskBottomSheet(int teamIndex) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -196,11 +202,7 @@ class _TaskState extends State<Task> {
       builder: (context) {
         return WillPopScope(
           onWillPop: () async {
-            // Clear controllers when dismissing the sheet
-            _taskNameController.clear();
-            _memberController.clear();
-            _dueDateController.clear();
-            _dueTimeController.clear();
+            _clearControllers();
             return true;
           },
           child: Padding(
@@ -385,7 +387,7 @@ class _TaskState extends State<Task> {
                       ),
                       const SizedBox(height: 20),
                       GestureDetector(
-                        onTap: _addNewTask,
+                        onTap: () => _addNewTask(teamIndex),
                         child: Container(
                           width: double.infinity,
                           height: 44,
@@ -1295,7 +1297,8 @@ class _TaskState extends State<Task> {
                                   ),
                                 ),
                                 child: InkWell(
-                                  onTap: _showAddTaskBottomSheet,
+                                  onTap: () =>
+                                      _showAddTaskBottomSheet(teamIndex),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
