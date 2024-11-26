@@ -85,36 +85,7 @@ class _TaskState extends State<Task> {
             prefs.getStringList('tasks_${i}_${teamsList[i].title}');
 
         if (tasksJson == null || tasksJson.isEmpty) {
-          if (i == 0) {
-            // Development Team default tasks
-            teamsList[i].tasks = [
-              TaskModel(
-                title: 'Calendar Integration',
-                time: 'Nov 20 2:00 PM',
-                dateBackgroundColor: const Color(0xFFFEF2CD).value,
-              ),
-              TaskModel(
-                title: 'Survey Review and Analysis',
-                time: 'Nov 20 2:00 PM',
-                dateBackgroundColor: const Color(0xFFFEF2CD).value,
-              ),
-              TaskModel(
-                title: 'Mobile App Design',
-                time: 'Oct 12 1:00 PM',
-                dateBackgroundColor: const Color(0xFFFEF2CD).value,
-              ),
-              TaskModel(
-                title: 'Calendar Integration',
-                time: 'Oct 15 2:30 PM',
-                dateBackgroundColor: const Color(0xFFFEF2CD).value,
-              ),
-              TaskModel(
-                title: 'Cloud-based backend for task data and messages',
-                time: 'Oct 20 4:00 PM',
-                dateBackgroundColor: const Color(0xFFFBD9D7).value,
-              ),
-            ];
-          }
+          teamsList[i].tasks = []; // Initialize with empty list
           _saveTeamTasks(i);
         } else {
           teamsList[i].tasks = tasksJson
@@ -903,6 +874,40 @@ class _TaskState extends State<Task> {
     _dueTimeController.clear();
   }
 
+  Future<void> _deleteTask(int teamIndex, {int? taskIndex}) async {
+    try {
+      setState(() {
+        if (taskIndex != null) {
+          teamsList[teamIndex].tasks.removeAt(taskIndex);
+        } else {
+          teamsList[teamIndex].tasks.clear();
+        }
+      });
+
+      await _saveTeamTasks(teamIndex);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Task deleted successfully'),
+            backgroundColor: Color(0xFF4525A2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error deleting task: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      rethrow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -967,51 +972,111 @@ class _TaskState extends State<Task> {
               showSearchIcon: true,
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              height: 61,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: tasks.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      right: index != tasks.length - 1 ? 25 : 0,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 106,
+                    height: 61,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(239, 236, 248, 1),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: const Color.fromRGBO(206, 197, 231, 1),
+                        width: 1.5,
+                      ),
                     ),
-                    child: Container(
-                      width: 106,
-                      height: 61,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(239, 236, 248, 1),
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(
-                          color: const Color.fromRGBO(206, 197, 231, 1),
-                          width: 1.5,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/today.png',
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            tasks[index]['image'],
-                            width: 20,
-                            height: 20,
+                        const SizedBox(height: 3),
+                        const Text(
+                          'Today',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF515152),
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            tasks[index]['title'],
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF515152),
-                            ),
-                          ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 106,
+                    height: 61,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(239, 236, 248, 1),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: const Color.fromRGBO(206, 197, 231, 1),
+                        width: 1.5,
                       ),
                     ),
-                  );
-                },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/schedule.png',
+                          width: 20,
+                          height: 20,
+                        ),
+                        const SizedBox(height: 3),
+                        const Text(
+                          'Scheduled',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF515152),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 106,
+                    height: 61,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(239, 236, 248, 1),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: const Color.fromRGBO(206, 197, 231, 1),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/assign.png',
+                          width: 20,
+                          height: 20,
+                        ),
+                        const SizedBox(height: 3),
+                        const Text(
+                          'Assigned to me',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF515152),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 25),
@@ -1080,16 +1145,12 @@ class _TaskState extends State<Task> {
                                       onPressed: () {
                                         showDialog(
                                           context: context,
-                                          builder: (context) =>
-                                              TaskOptionsDialog(
-                                            onDelete: () {
-                                              setState(() {
-                                                teamsList[teamIndex]
-                                                    .tasks
-                                                    .clear();
-                                                _saveTeamTasks(teamIndex);
-                                              });
-                                              Navigator.pop(context);
+                                          barrierDismissible: true,
+                                          builder:
+                                              (BuildContext dialogContext) =>
+                                                  TaskOptionsDialog(
+                                            onDelete: () async {
+                                              await _deleteTask(teamIndex);
                                             },
                                             onEdit: () {
                                               Navigator.pop(context);
@@ -1257,19 +1318,17 @@ class _TaskState extends State<Task> {
                                               onPressed: () {
                                                 showDialog(
                                                   context: context,
-                                                  builder: (context) =>
+                                                  barrierDismissible: true,
+                                                  builder: (BuildContext
+                                                          dialogContext) =>
                                                       TaskOptionsDialog(
-                                                    onDelete: () {
-                                                      setState(() {
-                                                        teamsList[teamIndex]
-                                                            .tasks
-                                                            .removeAt(index);
-                                                        _saveTeamTasks(
-                                                            teamIndex);
-                                                      });
-                                                      Navigator.pop(context);
+                                                    onDelete: () async {
+                                                      await _deleteTask(
+                                                          teamIndex,
+                                                          taskIndex: index);
                                                     },
                                                     onEdit: () {
+                                                      Navigator.pop(context);
                                                       _showEditTaskBottomSheet(
                                                           task, index);
                                                     },
