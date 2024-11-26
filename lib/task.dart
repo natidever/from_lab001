@@ -19,6 +19,16 @@ class Task extends StatefulWidget {
   }
 }
 
+class TeamTasks {
+  final String title;
+  List<TaskModel> tasks;
+
+  TeamTasks({
+    required this.title,
+    required this.tasks,
+  });
+}
+
 class _TaskState extends State<Task> {
   bool isChecked = false;
   bool isExpanded = true;
@@ -38,7 +48,17 @@ class _TaskState extends State<Task> {
     },
   ];
 
-  List<TaskModel> taskItems = [];
+  List<TeamTasks> teamsList = [
+    TeamTasks(
+      title: 'Development Team',
+      tasks: [], // Will be populated from SharedPreferences
+    ),
+    TeamTasks(
+      title: 'AIG Study Team',
+      tasks: [], // Will be populated from SharedPreferences
+    ),
+  ];
+
   static const String TASKS_KEY = 'tasks';
   late SharedPreferences prefs;
 
@@ -59,52 +79,60 @@ class _TaskState extends State<Task> {
   Future<void> _loadTasks() async {
     try {
       prefs = await SharedPreferences.getInstance();
-      final tasksJson = prefs.getStringList(TASKS_KEY);
 
-      setState(() {
+      for (int i = 0; i < teamsList.length; i++) {
+        final tasksJson =
+            prefs.getStringList('tasks_${i}_${teamsList[i].title}');
+
         if (tasksJson == null || tasksJson.isEmpty) {
-          // Initialize with default tasks
-          taskItems = [
-            TaskModel(
-              title: 'Mobile App Design',
-              time: 'Oct 12 1:00 PM',
-              dateBackgroundColor: const Color(0xFFFEF2CD).value,
-            ),
-            TaskModel(
-              title: 'Calendar Integration',
-              time: 'Oct 15 2:30 PM',
-              dateBackgroundColor: const Color(0xFFFEF2CD).value,
-            ),
-            TaskModel(
-              title: 'Cloud-based backend for task data and messages',
-              time: 'Oct 20 4:00 PM',
-              dateBackgroundColor: const Color(0xFFFBD9D7).value,
-            ),
-          ];
-          _saveTasks(); // Save default tasks
+          if (i == 0) {
+            // Development Team default tasks
+            teamsList[i].tasks = [
+              TaskModel(
+                title: 'Mobile App Design',
+                time: 'Oct 12 1:00 PM',
+                dateBackgroundColor: const Color(0xFFFEF2CD).value,
+              ),
+              TaskModel(
+                title: 'Calendar Integration',
+                time: 'Oct 15 2:30 PM',
+                dateBackgroundColor: const Color(0xFFFEF2CD).value,
+              ),
+              TaskModel(
+                title: 'Cloud-based backend for task data and messages',
+                time: 'Oct 20 4:00 PM',
+                dateBackgroundColor: const Color(0xFFFBD9D7).value,
+              ),
+            ];
+          }
+          _saveTeamTasks(i);
         } else {
-          taskItems = tasksJson
+          teamsList[i].tasks = tasksJson
               .map((json) => TaskModel.fromJson(jsonDecode(json)))
               .toList();
         }
-      });
+      }
+      setState(() {});
     } catch (e) {
       print('Error loading tasks: $e');
-      // Handle error gracefully
       setState(() {
-        taskItems = []; // Set empty list if there's an error
+        for (var team in teamsList) {
+          team.tasks = [];
+        }
       });
     }
   }
 
-  Future<void> _saveTasks() async {
+  Future<void> _saveTeamTasks(int teamIndex) async {
     try {
-      final tasksJson =
-          taskItems.map((task) => jsonEncode(task.toJson())).toList();
-      await prefs.setStringList(TASKS_KEY, tasksJson);
+      final tasksJson = teamsList[teamIndex]
+          .tasks
+          .map((task) => jsonEncode(task.toJson()))
+          .toList();
+      await prefs.setStringList(
+          'tasks_${teamIndex}_${teamsList[teamIndex].title}', tasksJson);
     } catch (e) {
       print('Error saving tasks: $e');
-      // Show error message to user if needed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error saving tasks'),
@@ -129,17 +157,17 @@ class _TaskState extends State<Task> {
         '${_dueDateController.text} ${_dueTimeController.text}';
 
     setState(() {
-      taskItems.insert(
-        0,
-        TaskModel(
-          title: _taskNameController.text,
-          time: dateTimeString,
-          dateBackgroundColor: const Color(0xFFFEF2CD).value,
-        ),
-      );
+      teamsList[0].tasks.insert(
+            0,
+            TaskModel(
+              title: _taskNameController.text,
+              time: dateTimeString,
+              dateBackgroundColor: const Color(0xFFFEF2CD).value,
+            ),
+          );
     });
 
-    _saveTasks(); // Save tasks after adding new one
+    _saveTeamTasks(0); // Save tasks after adding new one
 
     // Clear controllers and show success message
     _taskNameController.clear();
@@ -844,15 +872,15 @@ class _TaskState extends State<Task> {
         '${_dueDateController.text} ${_dueTimeController.text}';
 
     setState(() {
-      taskItems[index] = TaskModel(
+      teamsList[0].tasks[index] = TaskModel(
         title: _taskNameController.text,
         time: dateTimeString,
-        dateBackgroundColor: taskItems[index].dateBackgroundColor,
-        isChecked: taskItems[index].isChecked,
+        dateBackgroundColor: teamsList[0].tasks[index].dateBackgroundColor,
+        isChecked: teamsList[0].tasks[index].isChecked,
       );
     });
 
-    _saveTasks();
+    _saveTeamTasks(0);
     _clearControllers();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -987,283 +1015,315 @@ class _TaskState extends State<Task> {
             const SizedBox(height: 25),
             Expanded(
               child: SingleChildScrollView(
-                child: Container(
-                  width: 359,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFEFECF8),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            isExpanded = !isExpanded;
-                          });
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 16),
-                                child: Icon(
-                                  isExpanded
-                                      ? Icons.keyboard_arrow_up
-                                      : Icons.keyboard_arrow_down,
-                                  size: 24,
-                                  color: const Color(0xFF7C7C7D),
-                                ),
-                              ),
-                              Text(
-                                'Development Team',
-                                style: GoogleFonts.workSans(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF4525A2),
-                                ),
-                              ),
-                              IconButton(
-                                padding: const EdgeInsets.only(right: 16),
-                                icon: const Icon(
-                                  Icons.more_vert,
-                                  size: 24,
-                                  color: Color(0xFF7C7C7D),
-                                ),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => TaskOptionsDialog(
-                                      onDelete: () {
-                                        setState(() {
-                                          taskItems.clear();
-                                          _saveTasks();
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      onEdit: () {
-                                        // Since this is the team header, we might want to
-                                        // implement team editing functionality here
-                                        Navigator.pop(context);
+                child: Column(
+                  children: [
+                    for (int teamIndex = 0;
+                        teamIndex < teamsList.length;
+                        teamIndex++) ...[
+                      if (teamIndex > 0) const SizedBox(height: 20),
+                      Container(
+                        width: 359,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFFEFECF8),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  isExpanded = !isExpanded;
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 16),
+                                      child: Icon(
+                                        isExpanded
+                                            ? Icons.keyboard_arrow_up
+                                            : Icons.keyboard_arrow_down,
+                                        size: 24,
+                                        color: const Color(0xFF7C7C7D),
+                                      ),
+                                    ),
+                                    Text(
+                                      teamsList[teamIndex].title,
+                                      style: GoogleFonts.workSans(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                        color: teamIndex == 0
+                                            ? const Color(
+                                                0xFF4525A2) // Development Team color
+                                            : const Color(
+                                                0xFF2B2B2C), // AIG Study Team color
+                                      ),
+                                    ),
+                                    IconButton(
+                                      padding: const EdgeInsets.only(right: 16),
+                                      icon: const Icon(
+                                        Icons.more_vert,
+                                        size: 24,
+                                        color: Color(0xFF7C7C7D),
+                                      ),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) =>
+                                              TaskOptionsDialog(
+                                            onDelete: () {
+                                              setState(() {
+                                                teamsList[teamIndex]
+                                                    .tasks
+                                                    .clear();
+                                                _saveTeamTasks(teamIndex);
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                            onEdit: () {
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        );
                                       },
                                     ),
-                                  );
-                                },
+                                  ],
+                                ),
                               ),
+                            ),
+                            if (!isExpanded) ...[
+                              const SizedBox(height: 16),
+                              const Divider(
+                                color: Color(0xFFE3E3E3),
+                                height: 1,
+                                thickness: 1,
+                              ),
+                              const SizedBox(height: 16),
                             ],
-                          ),
-                        ),
-                      ),
-                      if (!isExpanded) ...[
-                        const SizedBox(height: 16),
-                        const Divider(
-                          color: Color(0xFFE3E3E3),
-                          height: 1,
-                          thickness: 1,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (isExpanded) ...[
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: taskItems.length,
-                          separatorBuilder: (context, index) => const Divider(
-                            color: Color(0xFFE3E3E3),
-                            height: 32,
-                            thickness: 1,
-                          ),
-                          itemBuilder: (context, index) {
-                            final task = taskItems[index];
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: Checkbox(
-                                          value: task.isChecked,
-                                          onChanged: (bool? value) {
-                                            setState(() {
-                                              task.isChecked = value ?? false;
-                                              _saveTasks();
-                                            });
-                                          },
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(6),
-                                          ),
-                                          side: const BorderSide(
-                                            color: Color(0xFFCEC5E7),
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          task.title,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                            color: const Color(0xFF515152),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        '0%',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: index == taskItems.length - 1
-                                              ? const Color(0xFFEA4335)
-                                              : const Color(0xFF7C7C7D),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 132,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          color:
-                                              Color(task.dateBackgroundColor),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          mainAxisSize: MainAxisSize.min,
+                            if (isExpanded) ...[
+                              ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: teamsList[teamIndex].tasks.length,
+                                separatorBuilder: (context, index) =>
+                                    const Divider(
+                                  color: Color(0xFFE3E3E3),
+                                  height: 32,
+                                  thickness: 1,
+                                ),
+                                itemBuilder: (context, index) {
+                                  final task =
+                                      teamsList[teamIndex].tasks[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: Column(
+                                      children: [
+                                        Row(
                                           children: [
-                                            const Icon(
-                                              Icons.access_time,
-                                              size: 12,
-                                              color: Color(0xFF2B2B2C),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Flexible(
-                                              child: Text(
-                                                task.time,
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  height: 1.2,
-                                                  color:
-                                                      const Color(0xFF2B2B2C),
+                                            SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: Checkbox(
+                                                value: task.isChecked,
+                                                onChanged: (bool? value) {
+                                                  setState(() {
+                                                    task.isChecked =
+                                                        value ?? false;
+                                                    _saveTeamTasks(teamIndex);
+                                                  });
+                                                },
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
                                                 ),
-                                                overflow: TextOverflow.ellipsis,
+                                                side: const BorderSide(
+                                                  color: Color(0xFFCEC5E7),
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                task.title,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w400,
+                                                  color:
+                                                      const Color(0xFF515152),
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              '0%',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: index ==
+                                                        teamsList[teamIndex]
+                                                                .tasks
+                                                                .length -
+                                                            1
+                                                    ? const Color(0xFFEA4335)
+                                                    : const Color(0xFF7C7C7D),
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Container(
-                                          height: 24,
-                                          width: 80,
-                                          child: Image.asset(
-                                            index == 0
-                                                ? 'assets/images/Prof.png'
-                                                : index == 1
-                                                    ? 'assets/images/Prof2.png'
-                                                    : 'assets/images/Prof3.png',
-                                            fit: BoxFit.contain,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: const Color(0xFFF2F2F2),
-                                          ),
-                                          padding: const EdgeInsets.all(4),
-                                          child: const Icon(
-                                            Icons.more_horiz,
-                                            size: 24,
-                                            color: Color(0xFF7C7C7D),
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) =>
-                                                TaskOptionsDialog(
-                                              onDelete: () {
-                                                setState(() {
-                                                  taskItems.removeAt(index);
-                                                  _saveTasks();
-                                                });
-                                              },
-                                              onEdit: () {
-                                                _showEditTaskBottomSheet(
-                                                    task, index);
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 132,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                color: Color(
+                                                    task.dateBackgroundColor),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.access_time,
+                                                    size: 12,
+                                                    color: Color(0xFF2B2B2C),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Flexible(
+                                                    child: Text(
+                                                      task.time,
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        height: 1.2,
+                                                        color: const Color(
+                                                            0xFF2B2B2C),
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Container(
+                                                height: 24,
+                                                width: 80,
+                                                child: Image.asset(
+                                                  index == 0
+                                                      ? 'assets/images/Prof.png'
+                                                      : index == 1
+                                                          ? 'assets/images/Prof2.png'
+                                                          : 'assets/images/Prof3.png',
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: Container(
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color:
+                                                      const Color(0xFFF2F2F2),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.all(4),
+                                                child: const Icon(
+                                                  Icons.more_horiz,
+                                                  size: 24,
+                                                  color: Color(0xFF7C7C7D),
+                                                ),
+                                              ),
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) =>
+                                                      TaskOptionsDialog(
+                                                    onDelete: () {
+                                                      setState(() {
+                                                        teamsList[teamIndex]
+                                                            .tasks
+                                                            .removeAt(index);
+                                                        _saveTeamTasks(
+                                                            teamIndex);
+                                                      });
+                                                      Navigator.pop(context);
+                                                    },
+                                                    onEdit: () {
+                                                      _showEditTaskBottomSheet(
+                                                          task, index);
+                                                    },
+                                                  ),
+                                                );
                                               },
                                             ),
-                                          );
-                                        },
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 32),
+                              Container(
+                                width: 318,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xFF4525A2),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: InkWell(
+                                  onTap: _showAddTaskBottomSheet,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add,
+                                        size: 24,
+                                        color: const Color(0xFF4525A2),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Add Task',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF4525A2),
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                            );
-                          },
+                              const SizedBox(height: 16),
+                            ],
+                          ],
                         ),
-                        const SizedBox(height: 32),
-                        Container(
-                          width: 318,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFF4525A2),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: InkWell(
-                            onTap: _showAddTaskBottomSheet,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add,
-                                  size: 24,
-                                  color: const Color(0xFF4525A2),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Add Task',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF4525A2),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ),
