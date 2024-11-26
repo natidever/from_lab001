@@ -300,10 +300,17 @@ class _TaskState extends State<Task> {
                                 ),
                               ),
                             ),
-                            Icon(
-                              Icons.more_horiz,
-                              size: 24,
-                              color: const Color(0xFF7C7C7D),
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFFF2F2F2),
+                              ),
+                              child: Icon(
+                                Icons.more_horiz,
+                                size: 24,
+                                color: const Color(0xFF7C7C7D),
+                              ),
+                              padding: const EdgeInsets.all(4),
                             ),
                           ],
                         ),
