@@ -261,45 +261,42 @@ class _TaskState extends State<Task> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Text(
-                              'Due Aug 10',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF7C7C7D),
+                            Container(
+                              width: 132,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEF2CD),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.access_time,
+                                    size: 12,
+                                    color: Color(0xFF2B2B2C),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Oct 12 1:00 PM',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.2,
+                                      color: const Color(0xFF2B2B2C),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: SizedBox(
-                                height: 32,
-                                child: Stack(
-                                  children: [
-                                    for (var i = 0; i < 4; i++)
-                                      Positioned(
-                                        left: i * 24.0,
-                                        child: Container(
-                                          width: 24,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: Colors.white,
-                                              width: 2,
-                                            ),
-                                            color: const Color(0xFFF2F2F2),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              'U${i + 1}',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xFF4525A2),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
+                              child: Container(
+                                height: 24,
+                                width: 80,
+                                child: Image.asset(
+                                  'assets/images/Prof.png',
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                             ),
