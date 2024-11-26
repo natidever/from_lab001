@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'widgets/custom_search_field.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class Task extends StatefulWidget {
   const Task({super.key});
@@ -68,6 +69,9 @@ class _TaskState extends State<Task> {
   final TextEditingController _memberController = TextEditingController();
   final TextEditingController _dueDateController = TextEditingController();
   final TextEditingController _dueTimeController = TextEditingController();
+
+  DateTime _selectedDay = DateTime.now();
+  DateTime _focusedDay = DateTime.now();
 
   void _addNewTask() {
     if (_taskNameController.text.isEmpty) {
@@ -211,25 +215,30 @@ class _TaskState extends State<Task> {
                           children: [
                             Expanded(
                               child: TextField(
+                                controller: _dueDateController,
+                                readOnly: true,
                                 decoration: InputDecoration(
                                   hintText: 'Insert Due Date',
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 15),
                                   hintStyle: GoogleFonts.poppins(
-                                    fontSize: 14,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w400,
                                     color: const Color(0xFF7C7C7D),
                                   ),
                                 ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 15),
-                              child: Icon(
-                                Icons.calendar_today_outlined,
-                                color: const Color(0xFF7C7C7D),
-                                size: 20,
+                            GestureDetector(
+                              onTap: () => _showCalendar(context),
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 15),
+                                child: Icon(
+                                  Icons.calendar_today_outlined,
+                                  color: const Color(0xFF7C7C7D),
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ],
@@ -314,6 +323,169 @@ class _TaskState extends State<Task> {
           ),
         );
       },
+    );
+  }
+
+  void _showCalendar(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Material(
+        color: Colors.transparent,
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            width: MediaQuery.of(context).size.width * 0.85,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.65,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Select Date',
+                        style: GoogleFonts.workSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF2B2B2C),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: Color(0xFFEFECF8)),
+                // Calendar with optimized size
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: TableCalendar(
+                        firstDay: DateTime.now(),
+                        lastDay: DateTime(2025),
+                        focusedDay: _focusedDay,
+                        selectedDayPredicate: (day) =>
+                            isSameDay(_selectedDay, day),
+                        calendarFormat: CalendarFormat.month,
+                        rowHeight: 40,
+                        daysOfWeekHeight: 20,
+                        headerStyle: HeaderStyle(
+                          titleCentered: true,
+                          formatButtonVisible: false,
+                          leftChevronIcon: const Icon(
+                            Icons.chevron_left,
+                            color: Color(0xFF4525A2),
+                            size: 24,
+                          ),
+                          rightChevronIcon: const Icon(
+                            Icons.chevron_right,
+                            color: Color(0xFF4525A2),
+                            size: 24,
+                          ),
+                          titleTextStyle: GoogleFonts.workSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF2B2B2C),
+                          ),
+                        ),
+                        calendarStyle: CalendarStyle(
+                          selectedDecoration: const BoxDecoration(
+                            color: Color(0xFF4525A2),
+                            shape: BoxShape.circle,
+                          ),
+                          todayDecoration: BoxDecoration(
+                            color: const Color(0xFF4525A2).withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          weekendTextStyle: const TextStyle(
+                            color: Color(0xFF515152),
+                            fontSize: 14,
+                          ),
+                          defaultTextStyle: const TextStyle(
+                            color: Color(0xFF2B2B2C),
+                            fontSize: 14,
+                          ),
+                          outsideTextStyle: TextStyle(
+                            color: const Color(0xFF2B2B2C).withOpacity(0.5),
+                            fontSize: 14,
+                          ),
+                        ),
+                        onDaySelected: (selectedDay, focusedDay) {
+                          setState(() {
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                // Action Buttons
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF7C7C7D),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          _dueDateController.text =
+                              "${_selectedDay.year}-${_selectedDay.month.toString().padLeft(2, '0')}-${_selectedDay.day.toString().padLeft(2, '0')}";
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4525A2),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'OK',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
